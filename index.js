@@ -148,11 +148,8 @@ client.on('messageCreate', async (message) => {
     await r(message, 'E-posta oluşturuluyor, lütfen bekleyin...');
 
     try {
-      // De user-account methode om de commands in dit specifieke kanaal te forceren
-      // Dit vult de interne cache van de selfbot aan en voorkomt de 'null' en 'undefined' errors
-      await channel.getSlashCommands().catch(() => {});
-      
-      // Verstuur de slash command interactie als user client
+      // Geen fetches, geen ingewikkelde cache-aanroepen.
+      // We sturen direct de juiste interactie-data naar de Discord API.
       await channel.sendSlash(botAppId, 'mail', [
         {
           name: 'domain',
@@ -172,6 +169,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
+  
   // ,afk
   if (command === 'afk') {
     if (!afk.active) {
