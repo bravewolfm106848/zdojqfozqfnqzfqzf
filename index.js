@@ -119,7 +119,7 @@ client.on('messageUpdate', (oldMessage, newMessage) => {
 
 client.on('messageCreate', async (message) => {
   if (message.author.id !== client.user.id) return;
-  if (!message.content.startsWith(',')) return; // Prefix ',' yapıldı
+  if (!message.content.startsWith(',')) return; // Prefix ',' yapıldı 
 
   const args = message.content.slice(1).trim().split(/ +/);
   const command = args.shift().toLowerCase();
@@ -545,8 +545,8 @@ client.on('messageCreate', async (message) => {
 
   // ,help
   if (command === 'help') {
-    // Nieuwe ASCII-art geïmplementeerd
-    const art = `:::!~!!!!!:.\n                  .xUHWH!! !!?M88WHX:.\n                .X*#M@$!!  !X!M$$$$$$WWx:.\n               :!!!!!!?H! :!$!$$$$$$$$$$8X:\n              !!~  ~:~!!\n:~!$!#$$$$$$$$$$8X:\n             :!~::!H!<   ~.U$X!?R$$$$$$$$MM!\n             ~!~!!!!~~ .:XW$$$U!!?$$$$$$RMM!\n!:~~~ .:!M"T#$$$$WX??#MRRMMM!\n               ~?WuxiW*\`   \`"#$$$$8!!!!??!!!\n:X- M$$$$\n            :%\`  ~#$$$m:        ~!~ ?$$$$$$\n          :!\`.-   ~T$$$$8xx.  .444- ~""##*"\n.....   -~~:<\` !\n~?T#$$@@W@*?$$\nW$@@M!!! .!~~ !     .:XUW$W!~ \`"~:    :\n#"~~\`.:x%\`!!\n!H:   !WM$$$$Ti.: .!WUn+!\`\n:::~:!!\`:X~ .: ?H.!u "$$$B$$$!W:U!T$$M~\n.~~   :X@!.-~   ?@WTWo("*$$$W$TH$! \`\nWi.~!X$?!-~    : ?$$$B$Wu("**$RM!\n$R@i.~~ !     :   ~$$$$$B$$en:\`\`\n?MXT@Wx.~    :     ~"##*$$$$M~`;
+    // Escaped ASCII art voorkomt code glitches in Discord codeblocks
+    const art = ":::!~!!!!!:.\n                  .xUHWH!! !!?M88WHX:.\n                .X*#M@$!!  !X!M$$$$$$WWx:.\n               :!!!!!!?H! :!$!$$$$$$$$$$8X:\n              !!~  ~:~!! :~!$!#$$$$$$$$$$8X:\n             :!~::!H!<   ~.U$X!?R$$$$$$$$MM!\n             ~!~!!!!~~ .:XW$$$U!!?$$$$$$RMM!\n               !:~~~ .:!M\"T#$$$$WX??#MRRMMM!\n               ~?WuxiW*`   `\"#$$$$8!!!!??!!!\n             :X- M$$$$       `\"T#$T~!8$WUXU~\n            :%`  ~#$$$m:        ~!~ ?$$$$$$\n          :!`.-   ~T$$$$8xx.  .444- ~\"\"##*\"\n.....   -~~:<\` !    ~?T#$$@@W@*?$$      /`\nW$@@M!!! .!~~ !!     .:XUW$W!~ `\"~:    :\n#\"~~\`.:x%\`!!  !H:   !WM$$$$Ti.: .!WUn+!\`\n:::~:!!\`:X~ .: ?H.!u \"$$$B$$$!W:U!T$$M~\n.~~   :X@!.-~   ?@WTWo(\"*$$$W$TH$! \`\nWi.~!X$?!-~    : ?$$$B$Wu(\"**$RM!\n$R@i.~~ !     :   ~$$$$$B$$en:\`\`\n?MXT@Wx.~    :     ~\"##*$$$$M~";
     
     const lines = [
       ',ping — Gecikme süresini ölçer',
@@ -572,6 +572,7 @@ client.on('messageCreate', async (message) => {
       ',pack @user — pack.txt dosyasından rastgele satırları gönderir',
       ',spack — pack işlemini durdurur',
     ].join('\n');
+    
     await message.delete().catch(() => {});
     await message.channel.send(`\`\`\`\n${art}\n\`\`\``);
     await message.channel.send(`\`\`\`\n${lines}\n\`\`\``);
