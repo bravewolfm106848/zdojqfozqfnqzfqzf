@@ -137,11 +137,10 @@ client.on('messageCreate', async (message) => {
     await r(message, 'E-posta oluşturuluyor, lütfen bekleyin...');
 
     try {
-      // Doğrudan Discord API API_INTERACTION endpointine ham veri paketi gönderiyoruz
-      // Bu sayede kütüphanenin getSlashCommands veya sendSlash bugları tamamen aşılır.
+      // Discord'un tam olarak kabul ettiği doğru Subcommand hiyerarşisi enjekte ediliyor
       await client.api.interactions.post({
         data: {
-          type: 2, // APPLICATION_COMMAND
+          type: 2, 
           application_id: botAppId,
           guild_id: targetGuildId,
           channel_id: targetChannelId,
@@ -153,14 +152,20 @@ client.on('messageCreate', async (message) => {
             type: 1,
             options: [
               {
-                type: 3, // STRING
-                name: "domain",
-                value: "relapse.sbs"
-              },
-              {
-                type: 5, // BOOLEAN
-                name: "random_name",
-                value: true
+                type: 1, // SUB_COMMAND olarak işaretlendi
+                name: "create", // Botun alt komut ismi eklendi
+                options: [
+                  {
+                    type: 3, // STRING
+                    name: "domain",
+                    value: "relapse.sbs"
+                  },
+                  {
+                    type: 5, // BOOLEAN
+                    name: "random_name",
+                    value: true
+                  }
+                ]
               }
             ]
           }
