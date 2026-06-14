@@ -57,6 +57,7 @@ const client = new Client({ checkUpdate: false });
 let afk = { active: false, message: '', startTime: null };
 let antiGc = false;
 let currentVC = null;
+let bootTime = Date.now(); // Uptime başlatma zamanı kaydedildi
 
 // Snipe Caches
 const snipeCache = new Map();
@@ -78,6 +79,7 @@ async function updatePresence(activities) {
 }
 
 client.on('ready', () => {
+  bootTime = Date.now(); // Bot hazır olduğunda süreyi sıfırla
   console.log(`Gizli mod aktif, giriş yapılan hesap: ${client.user.tag}`);
 });
 
@@ -130,6 +132,24 @@ client.on('messageCreate', async (message) => {
     const start = Date.now();
     const msg = await r(message, 'pingleniyor...');
     await msg.edit(`> pong! ${Date.now() - start}ms | ws: ${client.ws.ping}ms`);
+    return;
+  }
+
+  // ,uptime
+  if (command === 'uptime') {
+    const totalSecs = Math.floor((Date.now() - bootTime) / 1000);
+    const days = Math.floor(totalSecs / 86400);
+    const hours = Math.floor((totalSecs % 86400) / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+
+    let uptimeStr = '';
+    if (days > 0) uptimeStr += `${days} gün `;
+    if (hours > 0 || days > 0) uptimeStr += `${hours} saat `;
+    if (mins > 0 || hours > 0 || days > 0) uptimeStr += `${mins} dakika `;
+    uptimeStr += `${secs} saniye`;
+
+    await r(message, `Botun aktif kalma süresi: **${uptimeStr}**`);
     return;
   }
 
@@ -613,6 +633,7 @@ client.on('messageCreate', async (message) => {
     
     const lines = [
       ',ping — Gecikme süresini ölçer',
+      ',uptime — Botun ne kadar süredir açık olduğunu gösterir',
       ',afk [mesaj] — AFK modunu açar/kapatır',
       ',rpc satır1 | satır2 | satır3 | bigImg | smallImg — Özel yayın durumu (Kapatmak için: ,rpc off)',
       ',say <metin> — Mesajı normal gönderir',
