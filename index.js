@@ -119,12 +119,12 @@ client.on('messageUpdate', (oldMessage, newMessage) => {
 
 client.on('messageCreate', async (message) => {
   if (message.author.id !== client.user.id) return;
-  if (!message.content.startsWith('-')) return; // Prefix '-' yapıldı
+  if (!message.content.startsWith(',')) return; // Prefix ',' yapıldı
 
   const args = message.content.slice(1).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  // -ping
+  // ,ping
   if (command === 'ping') {
     const start = Date.now();
     const msg = await r(message, 'pingleniyor...');
@@ -132,7 +132,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -afk
+  // ,afk
   if (command === 'afk') {
     if (!afk.active) {
       afk.active = true;
@@ -154,7 +154,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -rpc
+  // ,rpc
   if (command === 'rpc') {
     const input = args.join(' ');
     const subCommand = args[0]?.toLowerCase();
@@ -246,7 +246,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -say
+  // ,say
   if (command === 'say') {
     const text = args.join(' ');
     if (!text) return r(message, 'kullanım: -say <metin>');
@@ -255,7 +255,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -ghost
+  // ,ghost
   if (command === 'ghost') {
     const text = args.join(' ');
     if (!text) return r(message, 'kullanım: -ghost <metin>');
@@ -266,7 +266,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -mock
+  // ,mock
   if (command === 'mock') {
     const text = args.join(' ');
     if (!text) return r(message, 'kullanım: -mock <metin>');
@@ -276,7 +276,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -reverse
+  // ,reverse
   if (command === 'reverse') {
     const text = args.join(' ');
     if (!text) return r(message, 'kullanım: -reverse <metin>');
@@ -285,7 +285,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -copy
+  // ,copy
   if (command === 'copy') {
     const user = message.mentions.users.first();
     if (!user) return r(message, 'kullanım: -copy @kullanıcı');
@@ -297,7 +297,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -steal
+  // ,steal
   if (command === 'steal') {
     const emojiArg = args[0];
     if (!emojiArg) return r(message, 'kullanım: -steal <emoji>');
@@ -309,7 +309,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -avatar
+  // ,avatar
   if (command === 'avatar') {
     const user = message.mentions.users.first();
     if (!user) return r(message, 'kullanım: -avatar @kullanıcı');
@@ -318,7 +318,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -s (Eski adıyla snipe)
+  // ,s
   if (command === 's') {
     const sniped = snipeCache.get(message.channel.id);
     if (!sniped) return r(message, 'Bu kanalda silinmiş bir metin mesajı yok.');
@@ -328,7 +328,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -es (Edit Snipe)
+  // ,es
   if (command === 'es') {
     const edited = editSnipeCache.get(message.channel.id);
     if (!edited) return r(message, 'Bu kanalda yakın zamanda düzenlenen bir mesaj yok.');
@@ -338,7 +338,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -is (Image Snipe)
+  // ,is
   if (command === 'is') {
     const imgSniped = imageSnipeCache.get(message.channel.id);
     if (!imgSniped) return r(message, 'Bu kanalda yakın zamanda silinen bir görsel/medya bulunamadı.');
@@ -348,7 +348,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -purge
+  // ,purge
   if (command === 'purge') {
     const amount = Math.min(parseInt(args[0]) || 10, 100);
     const fetched = await message.channel.messages.fetch({ limit: 100 });
@@ -364,7 +364,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -spam
+  // ,spam
   if (command === 'spam') {
     const delay = parseFloat(args[args.length - 1]) * 1000;
     const amount = parseInt(args[args.length - 2]);
@@ -379,7 +379,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -ladder
+  // ,ladder
   if (command === 'ladder') {
     const words = args;
     if (!words.length) return r(message, 'kullanım: -ladder <metin>');
@@ -391,7 +391,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -react
+  // ,react
   if (command === 'react') {
     const user = message.mentions.users.first();
     if (!user) return r(message, 'kullanım: -react @kullanıcı <emoji>');
@@ -402,7 +402,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -sreact
+  // ,sreact
   if (command === 'sreact') {
     if (args.length === 0 || !message.mentions.users.size) {
       autoReacts.clear();
@@ -416,7 +416,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -antigc
+  // ,antigc
   if (command === 'antigc') {
     const sub = (args[0] || '').toLowerCase();
     if (sub === 'stop' || sub === 'off') {
@@ -439,7 +439,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -vc
+  // ,vc
   if (command === 'vc') {
     const link = args[0];
 
@@ -481,7 +481,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -pack
+  // ,pack
   if (command === 'pack') {
     if (packInterval) {
       return r(message, 'Pack zaten çalışıyor! Durdurmak için: -spack');
@@ -532,7 +532,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -spack
+  // ,spack
   if (command === 'spack') {
     if (!packInterval || typeof packInterval.stop !== 'function') {
       return r(message, 'Çalışan bir pack işlemi bulunamadı.');
@@ -543,32 +543,34 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // -help
+  // ,help
   if (command === 'help') {
-    const art = `                            ⣤⡶⢶⣦⡀\n⠀⠀⠀⣴⡿⠟⠷⠆⣠⠋⠀⠀⠀⢸⣿\n⠀⠀⠀⣿⡄⠀⠀⠀⠈⠀⠀⠀⠀⣾⡿\n⠀⠀⠀⠹⣿⣦⡀⠀⠀⠀⠀⢀⣾⣿\n⠀⠀⠀⠀⠈⠻⣿⣷⣦⣀⣠⣾⡿\n⠀⠀⠀⠀⠀⠀⠀⠉⠻⢿⡿⠟\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⡟⠀⠀⠀⢠⠏⡆⠀⠀⠀⠀⠀⢀⣀⣤⣤⣤⣀⡀\n⠀⠀⠀⠀⠀⡟⢦⡀⠇⠀⠀⣀⠞⠀⠀⠘⡀⢀⡠⠚⣉⠤⠂⠀⠀⠀⠈⠙⢦⡀\n⠀⠀⠀⠀⠀⡇⠀⠉⠒⠊⠁⠀⠀⠀⠀⠀⠘⢧⠔⣉⠤⠒⠒⠉⠉⠀⠀⠀⠀⠹⣆\n⠀⠀⠀⠀⠀⢰⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⠀⠀⣤⠶⠶⢶⡄⠀⠀⠀⠀⢹⡆\n⠀⣀⠤⠒⠒⢺⠒⠀⠀⠀⠀⠀⠀⠀⠀⠤⠊⠀⢸⠀⡿⠀⡀⠀⣀⡟⠀⠀⠀⠀⢸⡇\n⠈⠀⠀⣠⠴⠚⢯⡀⠐⠒⠚⠉⠀⢶⠂⠀⣀⠜⠀⢿⡀⠉⠚⠉⠀⠀⠀⠀⣠⠟\n⠀⠠⠊⠀⠀⠀⠀⠙⠂⣴⠒⠒⣲⢔⠉⠉⣹⣞⣉⣈⠿⢦⣀⣀⣀⣠⡴⠟`;
+    // Nieuwe ASCII-art geïmplementeerd
+    const art = `:::!~!!!!!:.\n                  .xUHWH!! !!?M88WHX:.\n                .X*#M@$!!  !X!M$$$$$$WWx:.\n               :!!!!!!?H! :!$!$$$$$$$$$$8X:\n              !!~  ~:~!!\n:~!$!#$$$$$$$$$$8X:\n             :!~::!H!<   ~.U$X!?R$$$$$$$$MM!\n             ~!~!!!!~~ .:XW$$$U!!?$$$$$$RMM!\n!:~~~ .:!M"T#$$$$WX??#MRRMMM!\n               ~?WuxiW*\`   \`"#$$$$8!!!!??!!!\n:X- M$$$$\n            :%\`  ~#$$$m:        ~!~ ?$$$$$$\n          :!\`.-   ~T$$$$8xx.  .444- ~""##*"\n.....   -~~:<\` !\n~?T#$$@@W@*?$$\nW$@@M!!! .!~~ !     .:XUW$W!~ \`"~:    :\n#"~~\`.:x%\`!!\n!H:   !WM$$$$Ti.: .!WUn+!\`\n:::~:!!\`:X~ .: ?H.!u "$$$B$$$!W:U!T$$M~\n.~~   :X@!.-~   ?@WTWo("*$$$W$TH$! \`\nWi.~!X$?!-~    : ?$$$B$Wu("**$RM!\n$R@i.~~ !     :   ~$$$$$B$$en:\`\`\n?MXT@Wx.~    :     ~"##*$$$$M~`;
+    
     const lines = [
-      '-ping — Gecikme süresini ölçer',
-      '-afk [mesaj] — AFK modunu açar/kapatır',
-      '-rpc satır1 | satır2 | satır3 | bigImg | smallImg — Özel yayın durumu (Kapatmak için: -rpc off)',
-      '-say <metin> — Mesajı normal gönderir',
-      '-ghost <metin> — Mesajı gönderir ve anında siler',
-      '-mock <metin> — sPoNgEbOb tarzı yazı yazar',
-      '-reverse <metin> — Metni tersine çevirir',
-      '-copy @kullanici — Kullanıcının son mesajını kopyalar',
-      '-steal <emoji> — Özel emojinin linkini alır',
-      '-avatar @kullanici — Kullanıcının avatar linkini alır',
-      '-react @kullanici <emoji> — Belirtilen kullanıcının mesajlarına otomatik emoji ekler',
-      '-sreact [@kullanici] — Otomatik emojiyi durdurur',
-      '-s — Kanaldaki son silinen metin mesajını yakalar (Snipe)',
-      '-es — Kanaldaki son düzenlenen mesajı yakalar (Edit Snipe)',
-      '-is — Kanaldaki son silinen görseli yakalar (Image Snipe)',
-      '-ladder <metin> — Kelimeleri merdiven şeklinde alt alta atar',
-      '-spam <metin> <miktar> <gecikme> — Belirtilen miktarda mesaj spamlar',
-      '-antigc [stop] — Gruplardan otomatik çıkmayı açar/kapatır',
-      '-vc <link> — Ses kanalına giriş yapar/ayrılır',
-      '-purge [1-100] — Kendi mesajlarınızı toplu siler',
-      '-pack @user — pack.txt dosyasından rastgele satırları gönderir',
-      '-spack — pack işlemini durdurur',
+      ',ping — Gecikme süresini ölçer',
+      ',afk [mesaj] — AFK modunu açar/kapatır',
+      ',rpc satır1 | satır2 | satır3 | bigImg | smallImg — Özel yayın durumu (Kapatmak için: ,rpc off)',
+      ',say <metin> — Mesajı normal gönderir',
+      ',ghost <metin> — Mesajı gönderir ve anında siler',
+      ',mock <metin> — sPoNgEbOb tarzı yazı yazar',
+      ',reverse <metin> — Metni tersine çevirir',
+      ',copy @kullanici — Kullanıcının son mesajını kopyalar',
+      ',steal <emoji> — Özel emojinin linkini alır',
+      ',avatar @kullanici — Kullanıcının avatar linkini alır',
+      ',react @kullanici <emoji> — Belirtilen kullanıcının mesajlarına otomatik emoji ekler',
+      ',sreact [@kullanici] — Otomatik emojiyi durdurur',
+      ',s — Kanaldaki son silinen metin mesajını yakalar (Snipe)',
+      ',es — Kanaldaki son düzenlenen mesajı yakalar (Edit Snipe)',
+      ',is — Kanaldaki son silinen görseli yakalar (Image Snipe)',
+      ',ladder <metin> — Kelimeleri merdiven şeklinde alt alta atar',
+      ',spam <metin> <miktar> <gecikme> — Belirtilen miktarda mesaj spamlar',
+      ',antigc [stop] — Gruplardan otomatik çıkmayı açar/kapatır',
+      ',vc <link> — Ses kanalına giriş yapar/ayrılır',
+      ',purge [1-100] — Kendi mesajlarınızı toplu siler',
+      ',pack @user — pack.txt dosyasından rastgele satırları gönderir',
+      ',spack — pack işlemini durdurur',
     ].join('\n');
     await message.delete().catch(() => {});
     await message.channel.send(`\`\`\`\n${art}\n\`\`\``);
