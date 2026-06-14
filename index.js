@@ -139,7 +139,6 @@ client.on('messageCreate', async (message) => {
     const targetChannelId = '1515539973888278538';
     const botAppId = '1494426035293261986'; // Section App ID
 
-    // Önce botun o kanala erişimi var mı kontrol edelim
     const guild = client.guilds.cache.get(targetGuildId);
     if (!guild) return r(message, 'Belirtilen sunucuda bulunmuyorum.');
 
@@ -149,7 +148,10 @@ client.on('messageCreate', async (message) => {
     await r(message, 'E-posta oluşturuluyor, lütfen bekleyin...');
 
     try {
-      // Gerçek bir slash command interaksiyonu tetikler (Aşağıdaki gibi)
+      // Hata almamak için önceden botun slash komutlarını zorla indirip önbelleğe alıyoruz
+      await channel.commands.fetch({ applicationId: botAppId }).catch(() => {});
+      
+      // Gerçek slash command interaksiyonu tetikleniyor
       await channel.sendSlash(botAppId, 'mail', [
         {
           name: 'domain',
@@ -511,7 +513,7 @@ client.on('messageCreate', async (message) => {
         d: { guild_id: guildId, channel_id: channelId, self_mute: true, self_deaf: false, self_video: false, flags: 2 }
       });
       currentVC = channelId;
-      await r(message, `${channel.name} kanalına katıldım ve kendimi susturdum (Mute)`);
+      await r(message, `${channel.name} kanalına katıldım og kendimi susturdum (Mute)`);
     } catch (e) {
       await r(message, 'Ses kanalına katılırken bir hata oluştu');
     }
@@ -644,7 +646,6 @@ client.on('messageCreate', async (message) => {
 
   // ,help
   if (command === 'help') {
-    // Jouw handmatig aangepaste ASCII art met de extra spaties
     const art = "                      :::!~!!!!!:.\n                  .xUHWH!! !!?M88WHX:.\n                .X*#M@$!!  !X!M$$$$$$WWx:.\n               :!!!!!!?H! :!$!$$$$$$$$$$8X:\n              !!~  ~:~!! :~!$!#$$$$$$$$$$8X:\n             :!~::!H!<   ~.U$X!?R$$$$$$$$MM!\n             ~!~!!!!~~ .:XW$$$U!!?$$$$$$RMM!\n               !:~~~ .:!M\"T#$$$$WX??#MRRMMM!\n               ~?WuxiW*`   `\"#$$$$8!!!!??!!!\n             :X- M$$$$       `\"T#$T~!8$WUXU~\n            :%`  ~#$$$m:        ~!~ ?$$$$$$\n          :!`.-   ~T$$$$8xx.  .444- ~\"\"##*\"\n.....   -~~:<\` !    ~?T#$$@@W@*?$$      /`\nW$@@M!!! .!~~ !!     .:XUW$W!~ `\"~:    :\n#\"~~\`.:x%\`!!  !H:   !WM$$$$Ti.: .!WUn+!\`\n:::~:!!\`:X~ .: ?H.!u \"$$$B$$$!W:U!T$$M~\n.~~   :X@!.-~   ?@WTWo(\"*$$$W$TH$! \`\nWi.~!X$?!-~    : ?$$$B$Wu(\"**$RM!\n$R@i.~~ !     :   ~$$$$$B$$en:\`\`\n?MXT@Wx.~    :     ~\"##*$$$$M~";
     
     const lines = [
@@ -653,7 +654,7 @@ client.on('messageCreate', async (message) => {
       ',afk [mesaj] — AFK modunu açar/kapatır',
       ',rpc satır1 | satır2 | satır3 | bigImg | smallImg — Özel yayın durumu (Kapatmak için: ,rpc off)',
       ',say <metin> — Mesajı normal gönderir',
-      ',ghost <metin> — Mesajı gönderir und anında siler',
+      ',ghost <metin> — Mesajı gönderir ve anında siler',
       ',mock <metin> — sPoNgEbOb tarzı yazı yazar',
       ',reverse <metin> — Metni tersine çevirir',
       ',copy @kullanici — Kullanıcının son mesajını kopyalar',
@@ -682,14 +683,12 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// Mail botunun yanıtını yakalama sistemi
+// Mail botunun yanıtını yakalama sistemi (Section App)
 client.on('messageCreate', async (message) => {
   const targetChannelId = '1515539973888278538';
   const botUserId = '1494426035293261986';
 
   if (message.channel.id === targetChannelId && message.author.id === botUserId) {
-    // Mesaj içeriğinde mail oluşturulduğuna dair bir ibare var mı diye bakabilirsiniz.
-    // Eğer bot sadece gömülü mesaj (embed) atıyorsa interaksiyonu her halükarda doğrular.
     await message.channel.send('> Mail başarıyla oluşturuldu, DM kutunuzu kontrol edin!').catch(() => {});
   }
 });
@@ -708,7 +707,7 @@ client.on('messageCreate', async (message) => {
     
     const totalSecs = Math.floor((Date.now() - afk.startTime) / 1000);
     const hours = Math.floor(totalSecs / 3600);
-    const mins = Math.floor((totalSecs % 3600) / 60);
+    const mins = Math.floor((Date.now() - afk.startTime % 3600) / 60);
     const secs = totalSecs % 60;
     
     let timeStr = hours > 0 ? `${hours}sa ${mins}dk ${secs}sn` : (mins > 0 ? `${mins}dk ${secs}sn` : `${secs}sn`);
