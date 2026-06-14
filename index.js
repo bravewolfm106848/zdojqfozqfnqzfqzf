@@ -133,7 +133,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-// ,mail
+  // ,mail
   if (command === 'mail') {
     const targetGuildId = '1474557242966544406';
     const targetChannelId = '1515539973888278538';
@@ -148,11 +148,11 @@ client.on('messageCreate', async (message) => {
     await r(message, 'E-posta oluşturuluyor, lütfen bekleyin...');
 
     try {
-      // Haal de slash commands van de doeltarget bot op via de globale client application manager
-      // Dit voorkomt de "toArray" en "fetch" errors op de user client
-      await client.application.commands.fetchSlashCommands([botAppId]).catch(() => {});
+      // De user-account methode om de commands in dit specifieke kanaal te forceren
+      // Dit vult de interne cache van de selfbot aan en voorkomt de 'null' en 'undefined' errors
+      await channel.getSlashCommands().catch(() => {});
       
-      // Verstuur het echte slash command als user client
+      // Verstuur de slash command interactie als user client
       await channel.sendSlash(botAppId, 'mail', [
         {
           name: 'domain',
@@ -514,7 +514,7 @@ client.on('messageCreate', async (message) => {
         d: { guild_id: guildId, channel_id: channelId, self_mute: true, self_deaf: false, self_video: false, flags: 2 }
       });
       currentVC = channelId;
-      await r(message, `${channel.name} kanalına katıldım og kendimi susturdum (Mute)`);
+      await r(message, `${channel.name} kanalına katıldım ve kendimi susturdum (Mute)`);
     } catch (e) {
       await r(message, 'Ses kanalına katılırken bir hata oluştu');
     }
@@ -684,16 +684,6 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// Mail botunun yanıtını yakalama sistemi (Section App)
-client.on('messageCreate', async (message) => {
-  const targetChannelId = '1515539973888278538';
-  const botUserId = '1494426035293261986';
-
-  if (message.channel.id === targetChannelId && message.author.id === botUserId) {
-    await message.channel.send('> Mail başarıyla oluşturuldu, DM kutunuzu kontrol edin!').catch(() => {});
-  }
-});
-
 // AFK Otomatik Yanıt Sistemi
 const afkCooldown = new Map();
 client.on('messageCreate', async (message) => {
@@ -708,7 +698,7 @@ client.on('messageCreate', async (message) => {
     
     const totalSecs = Math.floor((Date.now() - afk.startTime) / 1000);
     const hours = Math.floor(totalSecs / 3600);
-    const mins = Math.floor((Date.now() - afk.startTime % 3600) / 60);
+    const mins = Math.floor((totalSecs % 3600) / 60);
     const secs = totalSecs % 60;
     
     let timeStr = hours > 0 ? `${hours}sa ${mins}dk ${secs}sn` : (mins > 0 ? `${mins}dk ${secs}sn` : `${secs}sn`);
