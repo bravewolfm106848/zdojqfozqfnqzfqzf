@@ -58,7 +58,7 @@ let afk = { active: false, message: '', startTime: null };
 let antiGc = false;
 let currentVC = null;
 
-// Snipe Caches
+// Snipe Önbellekleri
 const snipeCache = new Map();
 const editSnipeCache = new Map();
 const imageSnipeCache = new Map();
@@ -134,37 +134,36 @@ client.on('messageCreate', async (message) => {
     const targetChannelId = '1515539973888278538';
     const botAppId = '1494426035293261986'; 
 
+    const guild = client.guilds.cache.get(targetGuildId);
+    if (!guild) return r(message, 'Belirtilen sunucuda bulunmuyorum.');
+
+    const channel = guild.channels.cache.get(targetChannelId);
+    if (!channel) return r(message, 'Belirtilen kanal bulunamadı.');
+
     await r(message, 'E-posta oluşturuluyor, lütfen bekleyin...');
 
     try {
-      // Kütüphanenin hatalı sendSlash metodunu baypas edip doğrudan API isteği atıyoruz.
-      await client.api.interactions.post({
-        data: {
-          type: 2, // APPLICATION_COMMAND
-          application_id: botAppId,
-          guild_id: targetGuildId,
-          channel_id: targetChannelId,
-          session_id: client.ws.shards.first()?.sessionId || "",
-          data: {
-            version: "1342674939267153920", // Discord entegrasyon sürüm kimliği otomatik eşleşir
-            id: "1342674939267153921",      // Komut ID'si
-            name: "mail",
-            type: 1,
-            options: [
-              {
-                type: 3, // STRING
-                name: "domain",
-                value: "relapse.sbs"
-              },
-              {
-                type: 5, // BOOLEAN
-                name: "random_name",
-                value: true
-              }
-            ]
-          }
+      // Live de actieve slash-commando's van de bot ophalen uit dit specifieke kanaal
+      const komutlar = await channel.getSlashCommands();
+      const mailKomutu = komutlar.find(c => c.name === 'mail' && c.applicationId === botAppId);
+
+      if (!mailKomutu) {
+        return message.channel.send('> Hata: Hedef botun "mail" komutu bu kanalda bulunamadı.');
+      }
+
+      // Stuur het commando op de officiële manier door met de juiste actuele API-gegevens
+      await mailKomutu.sendRun([
+        {
+          name: 'domain',
+          type: 'STRING',
+          value: 'relapse.sbs'
+        },
+        {
+          name: 'random_name',
+          type: 'BOOLEAN',
+          value: true
         }
-      });
+      ]);
     } catch (err) {
       console.error('Slash komutu gönderilemedi:', err);
       await message.channel.send(`> Komut tetiklenirken hata oluştu: ${err.message}`);
