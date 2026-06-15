@@ -71,49 +71,6 @@ let loveInterval = null; // Interval cache voor het love commando
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 const r = (message, text) => message.reply(`> ${text}`);
 
-// Commando geschiedenis logboek cache (maximaal 5 tonen)
-const commandHistory = [];
-
-function renderTerminal() {
-  console.clear();
-  
-  // Jouw ASCII art uit het txt bestand
-  const asciiArt = 
-`██▀███  ▓█████  ██▓    ▄▄▄       ██▓███    ██████ ▓█████ 
-▓██ ▒ ██▒▓█   ▀ ▓██▒   ▒████▄    ▓██░  ██▒▒██    ▒ ▓█   ▀ 
-▓██ ░▄█ ▒▒███   ▒██░   ▒██  ▀█▄  ▓██░ ██▓▒░ ▓██▄   ▒███   
-▒██▀▀█▄  ▒▓█  ▄ ▒██░   ░██▄▄▄▄██ ▒██▄█▓▒ ▒  ▒   ██▒▒▓█  ▄ 
-░██▓ ▒██▒░▒████▒░██████▒▓█   ▓██▒▒██▒ ░  ░▒██████▒▒░▒████▒
-░ ▒▓ ░▒▓░░░ ▒░ ░░ ▒░▓  ░▒▒   ▓▒█░▒▓▒░ ░  ░▒ ▒▓▒ ▒ ░░░ ▒░ ░
-  ░▒ ░ ▒░ ░ ░  ░░ ░ ▒  ░ ▒   ▒▒ ░░▒ ░     ░ ░▒  ░ ░ ░ ░  ░
-  ░░   ░    ░     ░ ░    ░   ▒   ░░       ░  ░  ░     ░   
-   ░        ░  ░    ░  ░     ░  ░               ░     ░  ░
-                                                          `;
-
-  console.log(asciiArt);
-  console.log("\n"); // 2 empty lines
-  
-  // Toon de ingelogde user tag en ID in plaats van de oude tekst
-  console.log(`Welcome @ ${client.user.tag} (${client.user.id})`);
-  console.log("------------------------------------------------------------------");
-  console.log("\nLast commands:");
-  
-  if (commandHistory.length === 0) {
-    console.log("- Geen commando's uitgevoerd");
-  } else {
-    commandHistory.forEach(cmd => {
-      console.log(`- ${cmd}`);
-    });
-  }
-}
-
-// Functie om commando veilig toe te voegen na validatie
-function logCommand(content) {
-  commandHistory.push(content);
-  if (commandHistory.length > 5) commandHistory.shift();
-  renderTerminal();
-}
-
 async function updatePresence(activities) {
   currentPresence = activities.map(act => typeof act.toJSON === 'function' ? act.toJSON() : act);
   try {
@@ -123,7 +80,7 @@ async function updatePresence(activities) {
 
 client.on('ready', () => {
   bootTime = Date.now(); // Bot hazır olduğunda süreyi sıfırla
-  renderTerminal();
+  console.log(`Gizli mod aktif, giriş yapılan hesap: ${client.user.tag}`);
 });
 
 // Silinen mesajları yakalama (Snipe & Image Snipe)
@@ -172,7 +129,6 @@ client.on('messageCreate', async (message) => {
 
   // ,ping
   if (command === 'ping') {
-    logCommand(message.content);
     const start = Date.now();
     const msg = await r(message, 'pingleniyor...');
     await msg.edit(`> pong! ${Date.now() - start}ms | ws: ${client.ws.ping}ms`);
@@ -181,7 +137,6 @@ client.on('messageCreate', async (message) => {
 
   // ,uptime
   if (command === 'uptime') {
-    logCommand(message.content);
     const totalSecs = Math.floor((Date.now() - bootTime) / 1000);
     const days = Math.floor(totalSecs / 86400);
     const hours = Math.floor((totalSecs % 86400) / 3600);
@@ -200,7 +155,6 @@ client.on('messageCreate', async (message) => {
 
   // ,afk
   if (command === 'afk') {
-    logCommand(message.content);
     if (!afk.active) {
       afk.active = true;
       afk.message = args.join(' ') || 'afk';
@@ -222,7 +176,6 @@ client.on('messageCreate', async (message) => {
     const subCommand = args[0]?.toLowerCase();
 
     if (!input || subCommand === 'off') {
-      logCommand(message.content);
       await updatePresence([]);
       return r(message, 'Yayın durumu kapatıldı.');
     }
@@ -231,7 +184,6 @@ client.on('messageCreate', async (message) => {
     if (subCommand === 'on') {
       cleanInput = input.slice(3).trim();
       if (!cleanInput) {
-        logCommand(message.content);
         const defaultRpc = new RichPresence(client)
           .setApplicationId('1424226835582947439')
           .setType('STREAMING')
@@ -294,7 +246,6 @@ client.on('messageCreate', async (message) => {
         if (smallAssetPath) pr.setAssetsSmallImage(smallAssetPath);
       }
 
-      logCommand(message.content);
       await updatePresence([pr]);
 
       let responseText = `Yayın durumu başarıyla ayarlandı:`;
@@ -314,8 +265,7 @@ client.on('messageCreate', async (message) => {
   // ,avatar
   if (command === 'avatar') {
     const user = message.mentions.users.first();
-    if (!user) return r(message, 'kullanım: ,avatar @kullanıcı');
-    logCommand(message.content);
+    if (!user) return r(message, 'kullanım: -avatar @kullanıcı');
     const url = user.displayAvatarURL({ dynamic: true, size: 1024 });
     await r(message, `${user.username} adlı kullanıcının avatarı — ${url}`);
     return;
@@ -325,7 +275,6 @@ client.on('messageCreate', async (message) => {
   if (command === 's') {
     const sniped = snipeCache.get(message.channel.id);
     if (!sniped) return r(message, 'Bu kanalda silinmiş bir metin mesajı yok.');
-    logCommand(message.content);
     const secsAgo = Math.floor((Date.now() - sniped.deletedAt) / 1000);
     const timeStr = secsAgo < 60 ? `${secsAgo}sn önce` : `${Math.floor(secsAgo / 60)}dk önce`;
     await r(message, `${sniped.author} (${timeStr}): ${sniped.content}`);
@@ -336,7 +285,6 @@ client.on('messageCreate', async (message) => {
   if (command === 'es') {
     const edited = editSnipeCache.get(message.channel.id);
     if (!edited) return r(message, 'Bu kanalda yakın zamanda düzenlenen bir mesaj yok.');
-    logCommand(message.content);
     const secsAgo = Math.floor((Date.now() - edited.editedAt) / 1000);
     const timeStr = secsAgo < 60 ? `${secsAgo}sn önce` : `${Math.floor(secsAgo / 60)}dk önce`;
     await r(message, `${edited.author} (${timeStr}):\n> **Eski:** ${edited.oldContent}\n> **Yeni:** ${edited.newContent}`);
@@ -347,7 +295,6 @@ client.on('messageCreate', async (message) => {
   if (command === 'is') {
     const imgSniped = imageSnipeCache.get(message.channel.id);
     if (!imgSniped) return r(message, 'Bu kanalda yakın zamanda silinen bir görsel/medya bulunamadı.');
-    logCommand(message.content);
     const secsAgo = Math.floor((Date.now() - imgSniped.deletedAt) / 1000);
     const timeStr = secsAgo < 60 ? `${secsAgo}sn önce` : `${Math.floor(secsAgo / 60)}dk önce`;
     await r(message, `${imgSniped.author} (${timeStr}) tarafından silinen görsel:\n${imgSniped.url}`);
@@ -356,7 +303,6 @@ client.on('messageCreate', async (message) => {
 
   // ,purge
   if (command === 'purge') {
-    logCommand(message.content);
     const amount = Math.min(parseInt(args[0]) || 10, 100);
     const fetched = await message.channel.messages.fetch({ limit: 100 });
     const mine = [...fetched.filter(m => m.author.id === client.user.id).values()].slice(0, amount);
@@ -376,9 +322,8 @@ client.on('messageCreate', async (message) => {
     const delay = parseFloat(args[args.length - 1]) * 1000;
     const amount = parseInt(args[args.length - 2]);
     const text = args.slice(0, -2).join(' ');
-    if (!text || isNaN(amount) || isNaN(delay)) return r(message, 'kullanım: ,spam <metin> <miktar> <gecikme saniye>');
+    if (!text || isNaN(amount) || isNaN(delay)) return r(message, 'kullanım: -spam <metin> <miktar> <gecikme saniye>');
     if (amount > 100) return r(message, 'Maksimum 100 mesaj sınırı var');
-    logCommand(message.content);
     await message.delete().catch(() => {});
     for (let i = 0; i < amount; i++) {
       await message.channel.send(`> ${text}`);
@@ -390,8 +335,7 @@ client.on('messageCreate', async (message) => {
   // ,ladder
   if (command === 'ladder') {
     const words = args;
-    if (!words.length) return r(message, 'kullanım: ,ladder <metin>');
-    logCommand(message.content);
+    if (!words.length) return r(message, 'kullanım: -ladder <metin>');
     await message.delete().catch(() => {});
     for (const word of words) {
       await message.channel.send(`${word}`);
@@ -403,12 +347,9 @@ client.on('messageCreate', async (message) => {
   // ,react
   if (command === 'react') {
     const user = message.mentions.users.first();
-    if (!user) return r(message, 'kullanım: ,react @kullanıcı <emoji>');
-    const emoji = message.content.replace(`,react`, '').replace(`<@${user.id}>`, '').replace(`<@!${user.id}>`, '').trim();
-    if (!emoji) return r(message, 'kullanım: ,react @kullanıcı <emoji>');
-    
-    // Pas loggen als de emoji er daadwerkelijk is ingevuld!
-    logCommand(message.content);
+    if (!user) return r(message, 'kullanım: -react @kullanıcı <emoji>');
+    const emoji = message.content.replace(`-react`, '').replace(`<@${user.id}>`, '').replace(`<@!${user.id}>`, '').trim();
+    if (!emoji) return r(message, 'kullanım: -react @kullanıcı <emoji>');
     autoReacts.set(user.id, emoji);
     await r(message, `${user.username} adlı kullanıcının mesajlarına otomatik olarak ${emoji} tepkisi verilecek`);
     return;
@@ -417,13 +358,11 @@ client.on('messageCreate', async (message) => {
   // ,sreact
   if (command === 'sreact') {
     if (args.length === 0 || !message.mentions.users.size) {
-      logCommand(message.content);
       autoReacts.clear();
       await r(message, 'Tüm otomatik tepkiler durduruldu');
     } else {
       const user = message.mentions.users.first();
       if (!autoReacts.has(user.id)) return r(message, `${user.username} için aktif tepki bulunamadı`);
-      logCommand(message.content);
       autoReacts.delete(user.id);
       await r(message, `${user.username} için otomatik tepki kapatıldı`);
     }
@@ -434,12 +373,10 @@ client.on('messageCreate', async (message) => {
   if (command === 'antigc') {
     const sub = (args[0] || '').toLowerCase();
     if (sub === 'stop' || sub === 'off') {
-      logCommand(message.content);
       antiGc = false;
       await r(message, 'Anti-GC kapatıldı');
       return;
     }
-    logCommand(message.content);
     antiGc = true;
     let leftNow = 0;
     for (const [, ch] of client.channels.cache) {
@@ -451,7 +388,7 @@ client.on('messageCreate', async (message) => {
       }
     }
     const extra = leftNow > 0 ? ` ${leftNow} grup sohbetinden çıkıldı.` : '';
-    await r(message, `Anti-GC açıldı.${extra}\n> Eklendiğiniz grup sohbetlerinden anında ayrılacaksınız.\n> Kapatmak için: ,antigc stop`);
+    await r(message, `Anti-GC açıldı.${extra}\n> Eklendiğiniz grup sohbetlerinden anında ayrılacaksınız.\n> Kapatmak için: -antigc stop`);
     return;
   }
 
@@ -461,7 +398,6 @@ client.on('messageCreate', async (message) => {
 
     if (!link) {
       if (!currentVC) return r(message, 'Şu an bir ses kanalında değilim');
-      logCommand(message.content);
       message.guild.shard.send({
         op: 4,
         d: { guild_id: message.guild.id, channel_id: null, self_mute: false, self_deaf: false }
@@ -472,7 +408,7 @@ client.on('messageCreate', async (message) => {
     }
 
     const match = link.match(/channels\/(\d+)\/(\d+)/);
-    if (!match) return r(message, 'kullanım: ,vc <kanal linki>');
+    if (!match) return r(message, 'kullanım: -vc <kanal linki>');
     const [, guildId, channelId] = match;
 
     const guild = client.guilds.cache.get(guildId);
@@ -483,7 +419,6 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
-      logCommand(message.content);
       if (client.voice && client.voice.adapters) {
         client.voice.adapters.delete(guildId);
       }
@@ -502,12 +437,12 @@ client.on('messageCreate', async (message) => {
   // ,pack
   if (command === 'pack') {
     if (packInterval) {
-      return r(message, 'Pack zaten çalışıyor! Durdurmak için: ,spack');
+      return r(message, 'Pack zaten çalışıyor! Durdurmak için: -spack');
     }
 
     const targetUser = message.mentions.users.first();
     if (!targetUser) {
-      return r(message, 'kullanım: ,pack @user (Lütfen pinglemek istediğiniz kullanıcıyı etiketleyin)');
+      return r(message, 'kullanım: -pack @user (Lütfen pinglemek istediğiniz kullanıcıyı etiketleyin)');
     }
 
     const filePath = path.join(__dirname, 'pack.txt');
@@ -520,7 +455,6 @@ client.on('messageCreate', async (message) => {
       return r(message, 'pack.txt dosyası boş.');
     }
 
-    logCommand(message.content);
     await message.delete().catch(() => {});
 
     let isRunning = true;
@@ -556,7 +490,6 @@ client.on('messageCreate', async (message) => {
     if (!packInterval || typeof packInterval.stop !== 'function') {
       return r(message, 'Çalışan bir pack işlemi bulunamadı.');
     }
-    logCommand(message.content);
     packInterval.stop();
     packInterval = null;
     await r(message, 'Pack işlemi durduruldu.');
@@ -566,12 +499,12 @@ client.on('messageCreate', async (message) => {
   // ,love
   if (command === 'love') {
     if (loveInterval) {
-      return r(message, 'Love işlemi zaten çalışıyor! Durdurmak için: ,slove');
+      return r(message, 'Love işlemi zaten çalışıyor! Durdurmak için: -slove');
     }
 
     const targetUser = message.mentions.users.first();
     if (!targetUser) {
-      return r(message, 'kullanım: ,love @user (Lütfen sevgi mesajı göndermek istediğiniz kullanıcıyı etiketleyin)');
+      return r(message, 'kullanım: -love @user (Lütfen sevgi mesajı göndermek istediğiniz kullanıcıyı etiketleyin)');
     }
 
     const filePath = path.join(__dirname, 'love.txt');
@@ -584,7 +517,6 @@ client.on('messageCreate', async (message) => {
       return r(message, 'love.txt dosyası boş.');
     }
 
-    logCommand(message.content);
     await message.delete().catch(() => {});
 
     let isRunning = true;
@@ -620,7 +552,6 @@ client.on('messageCreate', async (message) => {
     if (!loveInterval || typeof loveInterval.stop !== 'function') {
       return r(message, 'Çalışan bir love işlemi bulunamadı.');
     }
-    logCommand(message.content);
     loveInterval.stop();
     loveInterval = null;
     await r(message, 'Love işlemi durduruldu.');
@@ -629,7 +560,6 @@ client.on('messageCreate', async (message) => {
 
   // ,help
   if (command === 'help') {
-    logCommand(message.content);
     const art = "                      :::!~!!!!!:.\n                  .xUHWH!! !!?M88WHX:.\n                .X*#M@$!!  !X!M$$$$$$WWx:.\n               :!!!!!?H! :!$!$$$$$$$$$$8X:\n              !!~  ~:~!! :~!$!#$$$$$$$$$$8X:\n             :!~::!H!<   ~.U$X!?R$$$$$$$$MM!\n             ~!~!!!!~~ .:XW$$$U!!?$$$$$$RMM!\n               !:~~~ .:!M\"T#$$$$WX??#MRRMMM!\n               ~?WuxiW*`   `\"#$$$$8!!!!??!!!\n             :X- M$$$$       `\"T#$T~!8$WUXU~\n            :%`  ~#$$$m:        ~!~ ?$$$$$$\n          :!`.-   ~T$$$$8xx.  .444- ~\"\"##*\"\n.....   -~~:<\` !    ~?T#$$@@W@*?$$      /`\nW$@@M!!! .!~~ !!     .:XUW$W!~ `\"~:    :\n#\"~~\`.:x%\`!!  !H:   !WM$$$$Ti.: .!WUn+!\`\n:::~:!!\`:X~ .: ?H.!u \"$$$B$$$!W:U!T$$M~\n.~~   :X@!.-~   ?@WTWo(\"*$$$W$TH$! \`\nWi.~!X$?!-~    : ?$$$B$Wu(\"**$RM!\n$R@i.~~ !     :   ~$$$$$B$$en:\`\`\n?MXT@Wx.~    :     ~\"##*$$$$M~";
     
     const lines = [
