@@ -396,11 +396,16 @@ client.on('messageCreate', async (message) => {
 
     if (!link) {
       if (!currentVC) return r(message, "I'm not in a voice channel right now");
-      const shardId = message.guild.shardId;
-      client.ws.shards.get(shardId).send({
-        op: 4,
-        d: { guild_id: message.guild.id, channel_id: null, self_mute: false, self_deaf: false }
-      });
+      const shardId = message.guild?.shardId;
+      if (shardId !== undefined) {
+        const shard = client.ws.shards.get(shardId);
+        if (shard) {
+          shard.send({
+            op: 4,
+            d: { guild_id: message.guild.id, channel_id: null, self_mute: false, self_deaf: false }
+          });
+        }
+      }
       currentVC = null;
       await r(message, 'Left the voice channel');
       return;
@@ -422,10 +427,15 @@ client.on('messageCreate', async (message) => {
         client.voice.adapters.delete(guildId);
       }
       const shardId = guild.shardId;
-      client.ws.shards.get(shardId).send({
-        op: 4,
-        d: { guild_id: guildId, channel_id: channelId, self_mute: true, self_deaf: false, self_video: false, flags: 2 }
-      });
+      if (shardId !== undefined) {
+        const shard = client.ws.shards.get(shardId);
+        if (shard) {
+          shard.send({
+            op: 4,
+            d: { guild_id: guildId, channel_id: channelId, self_mute: true, self_deaf: false, self_video: false, flags: 2 }
+          });
+        }
+      }
       currentVC = channelId;
       await r(message, `Joined channel ${channel.name} and muted myself`);
     } catch (e) {
@@ -630,17 +640,19 @@ client.on('channelCreate', async (channel) => {
 
 process.on('unhandledRejection', () => {});
 
-// Auto Mute protection (Fixed to prevent shard.send crash)
+// Auto Mute protection (Max protection for null objects during client connection sync)
 client.on('voiceStateUpdate', (oldState, newState) => {
-  if (newState.member.id === client.user.id && newState.channelId) {
+  if (newState?.member?.id === client.user?.id && newState?.channelId) {
     if (!newState.selfMute) {
-      const shardId = newState.guild.shardId;
-      const shard = client.ws.shards.get(shardId);
-      if (shard) {
-        shard.send({
-          op: 4,
-          d: { guild_id: newState.guild.id, channel_id: newState.channelId, self_mute: true, self_deaf: false, self_video: false }
-        });
+      const shardId = newState.guild?.shardId;
+      if (shardId !== undefined) {
+        const shard = client.ws.shards.get(shardId);
+        if (shard) {
+          shard.send({
+            op: 4,
+            d: { guild_id: newState.guild.id, channel_id: newState.channelId, self_mute: true, self_deaf: false, self_video: false }
+          });
+        }
       }
     }
   }
