@@ -23,14 +23,14 @@ const VR_PROPS = {
 };
 
 let currentPresence = null;
-let currentStatus = 'online'; // Default tracking status
+let currentStatus = 'online'; // Default fallback status
 
 // ── RAW GATEWAY INJECTION ─────────────────────────────────────────
 const _identify = WebSocketShard.prototype.identify;
 WebSocketShard.prototype.identify = function () {
   const _send = this.send.bind(this);
   this.send = function (data) {
-    // Op 2: Identify payload (Initial Connection)
+    // Op 2: Identify payload (Initial Connection Metadata)
     if (data && data.op === 2) {
       data.d.properties = { ...VR_PROPS };
       data.d.capabilities = 16381;
@@ -46,14 +46,18 @@ WebSocketShard.prototype.identify = function () {
     }
     // Op 3: Presence Update payload (Status/Activity changes)
     if (data && data.op === 3) {
-      if (data.d.status) {
-        currentStatus = data.d.status; // Dynamically track changes made by the user
-      } else {
-        data.d.status = currentStatus;
-      }
-      
-      if (currentPresence) {
-        data.d.activities = currentPresence;
+      if (data.d) {
+        // If the client sent a specific status change, track it safely
+        if (data.d.status) {
+          currentStatus = data.d.status;
+        } else {
+          data.d.status = currentStatus;
+        }
+        
+        // Inject custom rich presence if active
+        if (currentPresence) {
+          data.d.activities = currentPresence;
+        }
       }
     }
     return _send(data);
