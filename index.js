@@ -29,7 +29,6 @@ const _identify = WebSocketShard.prototype.identify;
 WebSocketShard.prototype.identify = function () {
   const _send = this.send.bind(this);
   this.send = function (data) {
-    // Initial Connection Hook
     if (data && data.op === 2) {
       data.d.properties = { ...VR_PROPS };
       data.d.capabilities = 16381;
@@ -43,13 +42,9 @@ WebSocketShard.prototype.identify = function () {
         api_code_version: 0,
       };
     }
-    // Ongoing Presence Update Hook (Keeps VR badge from dropping on status changes)
     if (data && data.op === 3) {
-      if (data.d) {
-        data.d.properties = { ...VR_PROPS }; // Forces VR metadata to persist
-        if (currentPresence) {
-          data.d.activities = currentPresence;
-        }
+      if (currentPresence) {
+        data.d.activities = currentPresence;
       }
     }
     return _send(data);
