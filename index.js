@@ -25,6 +25,7 @@ const VR_PROPS = {
 let currentPresence = null;
 
 // ── RAW GATEWAY INJECTION ─────────────────────────────────────────
+// Reverted back to your original clean setup that allows smooth logins
 const _identify = WebSocketShard.prototype.identify;
 WebSocketShard.prototype.identify = function () {
   const _send = this.send.bind(this);
@@ -81,6 +82,16 @@ async function updatePresence(activities) {
 client.on('ready', () => {
   bootTime = Date.now(); // Reset time when bot is ready
   console.log(`Stealth mode active, logged into account: ${client.user.tag}`);
+});
+
+// ── DYNAMIC STATUS SYNC ───────────────────────────────────────────
+// This catches whenever your account status changes globally and applies it directly
+client.on('presenceUpdate', (oldPresence, newPresence) => {
+  if (newPresence?.userId !== client.user.id) return;
+  const newStatus = newPresence.clientStatus?.desktop || newPresence.status;
+  if (newStatus) {
+    client.user.setStatus(newStatus).catch(() => {});
+  }
 });
 
 // Capture deleted messages (Snipe & Image Snipe)
