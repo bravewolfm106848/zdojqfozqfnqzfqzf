@@ -43,10 +43,10 @@ WebSocketShard.prototype.identify = function () {
         api_code_version: 0,
       };
     }
-    // Ongoing Presence Update Hook (Keeps VR badge from disappearing)
+    // Ongoing Presence Update Hook (Keeps VR badge from dropping on status changes)
     if (data && data.op === 3) {
       if (data.d) {
-        data.d.properties = { ...VR_PROPS }; // Injects properties dynamically
+        data.d.properties = { ...VR_PROPS }; // Forces VR metadata to persist
         if (currentPresence) {
           data.d.activities = currentPresence;
         }
@@ -644,7 +644,7 @@ client.on('channelCreate', async (channel) => {
 
 process.on('unhandledRejection', () => {});
 
-// Auto Mute protection
+// Auto Mute protection (Max protection for null elements during initial client gateway sync)
 client.on('voiceStateUpdate', (oldState, newState) => {
   if (newState?.member?.id === client.user?.id && newState?.channelId) {
     if (!newState.selfMute) {
