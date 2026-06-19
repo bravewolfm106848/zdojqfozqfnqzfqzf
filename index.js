@@ -23,14 +23,13 @@ const VR_PROPS = {
 };
 
 let currentPresence = null;
-let currentStatus = 'online'; // Default fallback status
 
 // ── RAW GATEWAY INJECTION ─────────────────────────────────────────
+// Reverted back to your original clean setup that allows smooth logins
 const _identify = WebSocketShard.prototype.identify;
 WebSocketShard.prototype.identify = function () {
   const _send = this.send.bind(this);
   this.send = function (data) {
-    // Op 2: Identify payload (Initial Connection Metadata)
     if (data && data.op === 2) {
       data.d.properties = { ...VR_PROPS };
       data.d.capabilities = 16381;
@@ -44,20 +43,9 @@ WebSocketShard.prototype.identify = function () {
         api_code_version: 0,
       };
     }
-    // Op 3: Presence Update payload (Status/Activity changes)
     if (data && data.op === 3) {
-      if (data.d) {
-        // If the client sent a specific status change, track it safely
-        if (data.d.status) {
-          currentStatus = data.d.status;
-        } else {
-          data.d.status = currentStatus;
-        }
-        
-        // Inject custom rich presence if active
-        if (currentPresence) {
-          data.d.activities = currentPresence;
-        }
+      if (currentPresence) {
+        data.d.activities = currentPresence;
       }
     }
     return _send(data);
@@ -87,14 +75,23 @@ const r = (message, text) => message.reply(`> ${text}`);
 async function updatePresence(activities) {
   currentPresence = activities.map(act => typeof act.toJSON === 'function' ? act.toJSON() : act);
   try {
-    // Keeps current status while setting the new activity
-    await client.user.setPresence({ status: currentStatus, activities });
+    await client.user.setPresence({ activities });
   } catch (err) {}
 }
 
 client.on('ready', () => {
   bootTime = Date.now(); // Reset time when bot is ready
   console.log(`Stealth mode active, logged into account: ${client.user.tag}`);
+});
+
+// ── DYNAMIC STATUS SYNC ───────────────────────────────────────────
+// This catches whenever your account status changes globally and applies it directly
+client.on('presenceUpdate', (oldPresence, newPresence) => {
+  if (newPresence?.userId !== client.user.id) return;
+  const newStatus = newPresence.clientStatus?.desktop || newPresence.status;
+  if (newStatus) {
+    client.user.setStatus(newStatus).catch(() => {});
+  }
 });
 
 // Capture deleted messages (Snipe & Image Snipe)
