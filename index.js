@@ -300,15 +300,33 @@ client.on('messageCreate', async (message) => {
 
   // ,purge
   if (command === 'purge') {
-    const amount = Math.min(parseInt(args[0]) || 10, 100);
-    const fetched = await message.channel.messages.fetch({ limit: 100 });
-    const mine = [...fetched.filter(m => m.author.id === client.user.id).values()].slice(0, amount);
+    const amount = parseInt(args[0]) || 10;
+    await message.delete().catch(() => {});
+    
     let deleted = 0;
-    for (const msg of mine) {
-      await msg.delete().catch(() => {});
-      deleted++;
-      await sleep(350);
+    let lastId = null;
+    
+    while (deleted < amount) {
+      const options = { limit: 100 };
+      if (lastId) options.before = lastId;
+      
+      const fetched = await message.channel.messages.fetch(options).catch(() => null);
+      if (!fetched || fetched.size === 0) break;
+      
+      const mine = fetched.filter(m => m.author.id === client.user.id);
+      
+      if (mine.size > 0) {
+        for (const msg of mine.values()) {
+          if (deleted >= amount) break;
+          await msg.delete().catch(() => {});
+          deleted++;
+          await sleep(200); // Optimized delay
+        }
+      }
+      
+      lastId = fetched.last().id;
     }
+    
     const confirm = await message.channel.send(`> ${deleted} messages deleted`);
     setTimeout(() => confirm.delete().catch(() => {}), 3000);
     return;
@@ -586,7 +604,7 @@ client.on('messageCreate', async (message) => {
       ',spam <text> <amount> <delay> — Spams a specified amount of messages with a delay',
       ',antigc [stop] — Toggles auto-leaving group chats on/off',
       ',vc <link> — Joins/Leaves a voice channel',
-      ',purge [1-100] — Mass deletes your own messages',
+      ',purge [amount] — Mass deletes your own messages without limit',
       ',pack @user — Sends random lines from pack.txt file',
       ',spack — Stops the pack process',
       ',love @user — Sends random lines from love.txt file',
