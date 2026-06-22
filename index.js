@@ -23,6 +23,7 @@ const VR_PROPS = {
 };
 
 let currentPresence = null;
+let currentCustomStatus = null; // Tracks the actual custom text status bubble
 
 // ── RAW GATEWAY INJECTION ─────────────────────────────────────────
 const _identify = WebSocketShard.prototype.identify;
@@ -45,6 +46,16 @@ WebSocketShard.prototype.identify = function () {
     if (data && data.op === 3) {
       if (currentPresence) {
         data.d.activities = currentPresence;
+      }
+      // Inject the custom status bubble text on handshake/reconnect
+      if (currentCustomStatus) {
+        if (!data.d.activities) data.d.activities = [];
+        data.d.activities.push({
+          type: 4,
+          name: 'Custom Status',
+          state: currentCustomStatus,
+          id: 'custom'
+        });
       }
     }
     return _send(data);
@@ -76,10 +87,27 @@ let replyMessageText = '';
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 const r = (message, text) => message.reply(`> ${text}`);
 
-async function updatePresence(activities) {
-  currentPresence = activities.map(act => typeof act.toJSON === 'function' ? act.toJSON() : act);
+// Helper function to update both standard activities and actual custom statuses via gateway
+async function updatePresence(activities, customStatusText = null) {
+  if (customStatusText !== null) {
+    currentCustomStatus = customStatusText;
+  }
+  
+  let formattedActivities = activities.map(act => typeof act.toJSON === 'function' ? act.toJSON() : act);
+  
+  // If we have a custom status set, append it natively to the payload
+  if (currentCustomStatus) {
+    formattedActivities.push({
+      type: 4,
+      name: 'Custom Status',
+      state: currentCustomStatus,
+      id: 'custom'
+    });
+  }
+
+  currentPresence = formattedActivities;
   try {
-    await client.user.setPresence({ activities });
+    await client.user.setPresence({ activities: formattedActivities });
   } catch (err) {}
 }
 
@@ -248,7 +276,8 @@ client.on('messageCreate', async (message) => {
         if (smallAssetPath) pr.setAssetsSmallImage(smallAssetPath);
       }
 
-      await updatePresence([pr]);
+      // Preserve existing custom status while updating RPC
+      await updatePresence([pr], currentCustomStatus);
 
       let responseText = `Streaming status successfully updated:`;
       if (line1) responseText += `\n> **Line 1 (Name):** ${line1}`;
@@ -264,7 +293,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // ,status (Cycles custom words every 10 seconds)
+  // ,status (Cycles custom actual text status profiles every 10 seconds)
   if (command === 'status') {
     if (statusInterval) {
       clearInterval(statusInterval);
@@ -272,28 +301,24 @@ client.on('messageCreate', async (message) => {
     }
 
     if (!args.length || args[0].toLowerCase() === 'stop') {
-      await updatePresence([]);
-      return r(message, 'Status cycle stopped.');
+      // Strips the custom status bubble out entirely
+      await updatePresence(currentPresence.filter(act => act.id !== 'custom'), "");
+      return r(message, 'Custom profile status cycle stopped.');
     }
 
     const words = args;
     let index = 0;
 
     const runCycle = async () => {
-      try {
-        const pr = new RichPresence(client)
-          .setApplicationId('1424226835582947439')
-          .setType('STREAMING')
-          .setURL('https://twitch.tv/twitch')
-          .setName(words[index]);
-        await updatePresence([pr]);
-        index = (index + 1) % words.length;
-      } catch (err) {}
+      // Updates the custom profile status text bubble while protecting other active presets (like ,rpc)
+      const nonStatusActivities = currentPresence ? currentPresence.filter(act => act.id !== 'custom') : [];
+      await updatePresence(nonStatusActivities, words[index]);
+      index = (index + 1) % words.length;
     };
 
     await runCycle();
     statusInterval = setInterval(runCycle, 10000);
-    await r(message, `Status cycle active (${words.length} words running).`);
+    await r(message, `Status cycle active (${words.length} text profiles running).`);
     return;
   }
 
@@ -666,7 +691,7 @@ client.on('messageCreate', async (message) => {
       ',uptime — Shows how long the bot has been running',
       ',afk [message] — Toggles AFK mode on/off',
       ',rpc line1 | line2 | line3 | bigImg | smallImg — Custom streaming status (To close: ,rpc off)',
-      ',status [word1] [word2] ... — Cycles custom status items every 10s (,status stop to disable)',
+      ',status [word1] [word2] ... — Cycles custom text statuses every 10s (,status stop to disable)',
       ',reply @user [message] — Forces auto-reply loop targeting user (,reply stop to disable)',
       ',avatar @user — Retrieves the user\'s avatar link',
       ',react @user <emoji> — Auto-adds an emoji reaction to the specified user\'s messages',
