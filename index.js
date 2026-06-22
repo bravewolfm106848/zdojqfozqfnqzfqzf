@@ -170,7 +170,7 @@ client.on('messageCreate', async (message) => {
 
   // ,uptime
   if (command === 'uptime') {
-    const totalSecs = Math.floor((Date.now() - bootTime) / 1000);
+    const totalSecs = Math.floor((Date.now() - bootTime) / 00);
     const days = Math.floor(totalSecs / 86400);
     const hours = Math.floor((totalSecs % 86400) / 3600);
     const mins = Math.floor((totalSecs % 3600) / 60);
@@ -317,7 +317,7 @@ client.on('messageCreate', async (message) => {
     };
 
     await runCycle();
-    statusInterval = setInterval(runCycle, 10000);
+    statusInterval = setInterval(runCycle, 3000);
     await r(message, `Status cycle active (${words.length} text profiles running).`);
     return;
   }
