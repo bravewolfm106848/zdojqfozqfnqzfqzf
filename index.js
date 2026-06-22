@@ -67,6 +67,11 @@ const imageSnipeCache = new Map();
 const autoReacts = new Map();
 let packInterval = null; 
 let loveInterval = null; // Interval cache for the love command
+let statusInterval = null; // Status cycle tracking
+
+// Auto-Reply Target Variables
+let targetReplyUser = null;
+let replyMessageText = '';
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 const r = (message, text) => message.reply(`> ${text}`);
@@ -256,6 +261,64 @@ client.on('messageCreate', async (message) => {
     } catch (e) {
       await r(message, `An error occurred while setting RPC status: ${e.message}`);
     }
+    return;
+  }
+
+  // ,status (Cycles custom words every 10 seconds)
+  if (command === 'status') {
+    if (statusInterval) {
+      clearInterval(statusInterval);
+      statusInterval = null;
+    }
+
+    if (!args.length || args[0].toLowerCase() === 'stop') {
+      await updatePresence([]);
+      return r(message, 'Status cycle stopped.');
+    }
+
+    const words = args;
+    let index = 0;
+
+    const runCycle = async () => {
+      try {
+        const pr = new RichPresence(client)
+          .setApplicationId('1424226835582947439')
+          .setType('STREAMING')
+          .setURL('https://twitch.tv/twitch')
+          .setName(words[index]);
+        await updatePresence([pr]);
+        index = (index + 1) % words.length;
+      } catch (err) {}
+    };
+
+    await runCycle();
+    statusInterval = setInterval(runCycle, 10000);
+    await r(message, `Status cycle active (${words.length} words running).`);
+    return;
+  }
+
+  // ,reply (Auto-replies to a specific user)
+  if (command === 'reply') {
+    if (args[0]?.toLowerCase() === 'stop') {
+      targetReplyUser = null;
+      replyMessageText = '';
+      return r(message, 'Auto-reply engine disabled.');
+    }
+
+    const user = message.mentions.users.first();
+    if (!user) return r(message, 'Usage: `,reply @user <message>` or `,reply stop`');
+
+    const cleanReplyText = message.content
+      .replace(`,reply`, '')
+      .replace(`<@${user.id}>`, '')
+      .replace(`<@!${user.id}>`, '')
+      .trim();
+
+    if (!cleanReplyText) return r(message, 'Usage: `,reply @user <message>`');
+
+    targetReplyUser = user.id;
+    replyMessageText = cleanReplyText;
+    await r(message, `Auto-reply targeting ${user.username} configured.`);
     return;
   }
 
@@ -587,13 +650,24 @@ client.on('messageCreate', async (message) => {
 
   // ,help
   if (command === 'help') {
-    const art = "                      :::!~!!!!!:.\n                  .xUHWH!! !!?M88WHX:.\n                .X*#M@$!!  !X!M$$$$$$WWx:.\n               :!!!!!?H! :!$!$$$$$$$$$$8X:\n              !!~  ~:~!! :~!$!#$$$$$$$$$$8X:\n             :!~::!H!<   ~.U$X!?R$$$$$$$$MM!\n             ~!~!!!!~~ .:XW$$$U!!?$$$$$$RMM!\n               !:~~~ .:!M\"T#$$$$WX??#MRRMMM!\n               ~?WuxiW*`   `\"#$$$$8!!!!??!!!\n             :X- M$$$$       `\"T#$T~!8$WUXU~\n            :%`  ~#$$$m:        ~!~ ?$$$$$$\n          :!`.-   ~T$$$$8xx.  .444- ~\"\"##*\"\n.....   -~~:<\` !    ~?T#$$@@W@*?$$      /`\nW$@@M!!! .!~~ !!     .:XUW$W!~ `\"~:    :\n#\"~~\`.:x%\`!!  !H:   !WM$$$$Ti.: .!WUn+!\`\n:::~:!!\`:X~ .: ?H.!u \"$$$B$$$!W:U!T$$M~\n.~~   :X@!.-~   ?@WTWo(\"*$$$W$TH$! \`\nWi.~!X$?!-~    : ?$$$B$Wu(\"**$RM!\n$R@i.~~ !     :   ~$$$$$B$$en:\`\`\n?MXT@Wx.~    :     ~\"##*$$$$M~";
+    const art = `                                                            
+    ██               ▄▄▄▄         ██                        
+    ▀▀               ▀▀██         ▀▀                        
+  ████     ██    ██    ██       ████      ▄█████▄  ██▄████▄ 
+    ██     ██    ██    ██         ██      ▀ ▄▄▄██  ██▀   ██ 
+    ██     ██    ██    ██         ██     ▄██▀▀▀██  ██    ██ 
+    ██     ██▄▄▄███    ██▄▄▄   ▄▄▄██▄▄▄  ██▄▄▄███  ██    ██ 
+    ██      ▀▀▀▀ ▀▀     ▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀ ▀▀  ▀▀    ▀▀ 
+ ████▀                                                      
+                                                            `;
     
     const lines = [
       ',ping — Measures response latency',
       ',uptime — Shows how long the bot has been running',
       ',afk [message] — Toggles AFK mode on/off',
       ',rpc line1 | line2 | line3 | bigImg | smallImg — Custom streaming status (To close: ,rpc off)',
+      ',status [word1] [word2] ... — Cycles custom status items every 10s (,status stop to disable)',
+      ',reply @user [message] — Forces auto-reply loop targeting user (,reply stop to disable)',
       ',avatar @user — Retrieves the user\'s avatar link',
       ',react @user <emoji> — Auto-adds an emoji reaction to the specified user\'s messages',
       ',sreact [@user] — Stops auto-reactions',
@@ -638,6 +712,17 @@ client.on('messageCreate', async (message) => {
     let timeStr = hours > 0 ? `${hours}h ${mins}m ${secs}s` : (mins > 0 ? `${mins}m ${secs}s` : `${secs}s`);
     await message.reply(`> ${client.user.username} is currently AFK.\n> Reason: ${afk.message}\n> Duration: ${timeStr}`).catch(() => {});
   }
+});
+
+// Auto-Reply Mechanism Listener
+client.on('messageCreate', async (message) => {
+  if (!targetReplyUser || !replyMessageText) return;
+  if (message.author.id !== targetReplyUser) return;
+  
+  // Prevent the bot from triggering an infinity loop against itself 
+  if (message.author.id === client.user.id) return; 
+
+  await message.reply(replyMessageText).catch(() => {});
 });
 
 // Auto-reaction listener
